@@ -66,11 +66,6 @@ public class NameTagService {
     private final AtomicInteger teamId = new AtomicInteger(0);
     private final Map<NameTag, NameTagData> nameTagData = new ConcurrentHashMap<>();
     private final List<NameTagAdapter> nameTagAdapters = new LinkedList<>();
-    private final ExecutorScheduler scheduler = new ExecutorScheduler(NamedThreadFactory.builder()
-            .name("nametag-update")
-            .daemon(true)
-            .uncaughtExceptionHandler((t, e) -> Log.error("An error occurred while running async task", e))
-            .build());
 
     private final ContainerContext containerContext;
     private final MCPlayerRegistry mcPlayerRegistry;
@@ -84,14 +79,9 @@ public class NameTagService {
         );
     }
 
-    private CompletableFuture<?> runAsync(Runnable runnable) {
-        return this.scheduler.schedule(() -> {
-            try {
-                runnable.run();
-            } catch (Throwable throwable) {
-                Log.error("An error occurred while running async task", throwable);
-            }
-        }).getFuture();
+    private CompletableFuture<?> runSync(Runnable runnable) {
+        runnable.run();
+        return CompletableFuture.completedFuture(null);
     }
 
     @Subscribe
@@ -105,7 +95,7 @@ public class NameTagService {
     public void onPlayerQuit(MCPlayerQuitEvent event) {
         MCPlayer player = event.getPlayer();
         String name = player.getName();
-        runAsync(() -> {
+        runSync(() -> {
             removeNameFromAll(name);
 
             player.metadata().remove(TEAM_INFO_KEY);
@@ -155,18 +145,18 @@ public class NameTagService {
 
     public CompletableFuture<?> updateFromThirdSide(MCPlayer target) {
         NameTagUpdate update = NameTagUpdate.createAllToPlayer(target);
-        return runAsync(() -> this.applyUpdate(update));
+        return runSync(() -> this.applyUpdate(update));
     }
 
     public CompletableFuture<?> updateFromFirstSide(MCPlayer player) {
         NameTagUpdate update = NameTagUpdate.createPlayerToAll(player);
-        return runAsync(() -> this.applyUpdate(update));
+        return runSync(() -> this.applyUpdate(update));
     }
 
     public CompletableFuture<?> update(MCPlayer player) {
         NameTagUpdate firstSide = NameTagUpdate.createPlayerToAll(player);
         NameTagUpdate thirdSide = NameTagUpdate.createAllToPlayer(player);
-        return runAsync(() -> {
+        return runSync(() -> {
             this.applyUpdate(firstSide);
             this.applyUpdate(thirdSide);
         });
@@ -174,11 +164,11 @@ public class NameTagService {
 
     public CompletableFuture<?> update(MCPlayer target, MCPlayer player) {
         NameTagUpdate update = NameTagUpdate.create(target, player);
-        return runAsync(() -> this.applyUpdate(update));
+        return runSync(() -> this.applyUpdate(update));
     }
 
     public CompletableFuture<?> updateAll() {
-        return runAsync(() -> this.applyUpdate(NameTagUpdate.all()));
+        return runSync(() -> this.applyUpdate(NameTagUpdate.all()));
     }
 
     protected void applyUpdate(@NotNull NameTagUpdate update) {
