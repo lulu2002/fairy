@@ -41,6 +41,7 @@ import io.fairyproject.mc.nametag.update.NameTagUpdate;
 import io.fairyproject.mc.nametag.update.SinglePlayerNameTagUpdate;
 import io.fairyproject.mc.protocol.MCProtocol;
 import io.fairyproject.mc.registry.player.MCPlayerRegistry;
+import io.fairyproject.mc.scheduler.MCSchedulerProvider;
 import io.fairyproject.metadata.MetadataKey;
 import io.fairyproject.scheduler.executor.ExecutorScheduler;
 import io.fairyproject.util.Utility;
