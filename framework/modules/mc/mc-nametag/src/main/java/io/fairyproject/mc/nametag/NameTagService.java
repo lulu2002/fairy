@@ -66,6 +66,7 @@ public class NameTagService {
     private final AtomicInteger teamId = new AtomicInteger(0);
     private final Map<NameTag, NameTagData> nameTagData = new ConcurrentHashMap<>();
     private final List<NameTagAdapter> nameTagAdapters = new LinkedList<>();
+    private final MCSchedulerProvider mcSchedulerProvider;
 
     private final ContainerContext containerContext;
     private final MCPlayerRegistry mcPlayerRegistry;
@@ -79,9 +80,14 @@ public class NameTagService {
         );
     }
 
-    private CompletableFuture<?> runSync(Runnable runnable) {
-        runnable.run();
-        return CompletableFuture.completedFuture(null);
+    private CompletableFuture<?> runAsync(Runnable runnable) {
+        return this.mcSchedulerProvider.getGlobalScheduler().schedule(() -> {
+            try {
+                runnable.run();
+            } catch (Throwable throwable) {
+                Log.error("An error occurred while running async task", throwable);
+            }
+        }).getFuture();
     }
 
     @Subscribe
@@ -95,7 +101,7 @@ public class NameTagService {
     public void onPlayerQuit(MCPlayerQuitEvent event) {
         MCPlayer player = event.getPlayer();
         String name = player.getName();
-        runSync(() -> {
+        runAsync(() -> {
             removeNameFromAll(name);
 
             player.metadata().remove(TEAM_INFO_KEY);
@@ -124,7 +130,7 @@ public class NameTagService {
         WrapperPlayServerTeams packet = new WrapperPlayServerTeams(
                 data.getName(),
                 WrapperPlayServerTeams.TeamMode.REMOVE_ENTITIES,
-                (WrapperPlayServerTeams.ScoreBoardTeamInfo) null,
+                ( WrapperPlayServerTeams.ScoreBoardTeamInfo ) null,
                 name
         );
         MCProtocol.sendPacket(player, packet);
@@ -145,18 +151,18 @@ public class NameTagService {
 
     public CompletableFuture<?> updateFromThirdSide(MCPlayer target) {
         NameTagUpdate update = NameTagUpdate.createAllToPlayer(target);
-        return runSync(() -> this.applyUpdate(update));
+        return runAsync(() -> this.applyUpdate(update));
     }
 
     public CompletableFuture<?> updateFromFirstSide(MCPlayer player) {
         NameTagUpdate update = NameTagUpdate.createPlayerToAll(player);
-        return runSync(() -> this.applyUpdate(update));
+        return runAsync(() -> this.applyUpdate(update));
     }
 
     public CompletableFuture<?> update(MCPlayer player) {
         NameTagUpdate firstSide = NameTagUpdate.createPlayerToAll(player);
         NameTagUpdate thirdSide = NameTagUpdate.createAllToPlayer(player);
-        return runSync(() -> {
+        return runAsync(() -> {
             this.applyUpdate(firstSide);
             this.applyUpdate(thirdSide);
         });
@@ -164,11 +170,11 @@ public class NameTagService {
 
     public CompletableFuture<?> update(MCPlayer target, MCPlayer player) {
         NameTagUpdate update = NameTagUpdate.create(target, player);
-        return runSync(() -> this.applyUpdate(update));
+        return runAsync(() -> this.applyUpdate(update));
     }
 
     public CompletableFuture<?> updateAll() {
-        return runSync(() -> this.applyUpdate(NameTagUpdate.all()));
+        return runAsync(() -> this.applyUpdate(NameTagUpdate.all()));
     }
 
     protected void applyUpdate(@NotNull NameTagUpdate update) {
@@ -243,7 +249,7 @@ public class NameTagService {
         WrapperPlayServerTeams packet = new WrapperPlayServerTeams(
                 current.getName(),
                 WrapperPlayServerTeams.TeamMode.ADD_ENTITIES,
-                (WrapperPlayServerTeams.ScoreBoardTeamInfo) null,
+                ( WrapperPlayServerTeams.ScoreBoardTeamInfo ) null,
                 target.getName()
         );
         MCProtocol.sendPacket(player, packet);
