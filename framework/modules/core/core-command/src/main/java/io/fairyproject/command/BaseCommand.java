@@ -114,6 +114,16 @@ public abstract class BaseCommand implements ICommand {
     }
 
     /**
+     * Method called when the executor does not have permission to execute the
+     * command.
+     *
+     * @param commandContext Context of the command
+     */
+    public void onAccessDenied(CommandContext commandContext) {
+        commandContext.sendMessage(MessageType.ERROR, "You don't have permission to execute this command!");
+    }
+
+    /**
      * In the context in which none of the sub-commands match, this method will be
      * called if all arguments match the parameters.
      * @param commandContext Context of the command
@@ -181,7 +191,7 @@ public abstract class BaseCommand implements ICommand {
         }
 
         if (!this.canAccess(commandContext)) {
-            commandContext.sendMessage(MessageType.ERROR, "You don't have permission to execute this command!");
+            this.onAccessDenied(commandContext);
             return;
         }
 

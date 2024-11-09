@@ -235,7 +235,7 @@ public class CommandMeta implements ICommand {
         }
 
         if (!this.canAccess(commandContext)) {
-            commandContext.sendMessage(MessageType.ERROR, "You don't have permission to execute this command!");
+            baseCommand.onAccessDenied(commandContext);
             return;
         }
 
