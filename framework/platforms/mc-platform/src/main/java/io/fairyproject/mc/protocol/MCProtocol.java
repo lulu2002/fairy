@@ -57,20 +57,24 @@ public class MCProtocol {
     private final ContainerContext context;
     private final MCPlayerRegistry playerRegistry;
     private final MCVersionMappingRegistry mappingRegistry;
-    private final PacketEventsBuilder packetEventsBuilder;
     private final PacketSender packetSender;
 
     private PacketEventsAPI<?> packetEvents;
 
     private final Map<Class<?>, PacketListenerCommon> listenerCommonMap = new ConcurrentHashMap<>();
 
+    public static void loadProtocol(PacketEventsBuilder packetEventsBuilder) {
+        PacketEvents.setAPI(packetEventsBuilder.build());
+        PacketEvents.getAPI().load();
+
+        System.out.printf("Loaded PacketEvents with version %s on minecraft version %s%n", PacketEvents.getAPI().getVersion(), PacketEvents.getAPI().getServerManager().getVersion());
+    }
+
     @PreInitialize
     public void onPreInitialize() {
         INSTANCE = this;
 
-        this.packetEvents = this.packetEventsBuilder.build();
-        PacketEvents.setAPI(this.packetEvents);
-        this.packetEvents.load();
+        this.packetEvents = PacketEvents.getAPI();
 
         // automatically register PacketListener that are obj
         this.registerPacketListenerObjectCollector();
@@ -82,8 +86,8 @@ public class MCProtocol {
     @PostInitialize
     public void onPostInitialize() {
         this.packetEvents.getSettings()
-                .debug(false)
-                .bStats(false)
+                .debug(true)
+                .bStats(true)
                 .checkForUpdates(false)
                 .timeStampMode(TimeStampMode.MILLIS);
         this.packetEvents.init();

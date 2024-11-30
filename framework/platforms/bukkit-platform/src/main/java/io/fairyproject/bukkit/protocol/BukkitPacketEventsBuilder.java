@@ -25,6 +25,7 @@
 package io.fairyproject.bukkit.protocol;
 
 import com.github.retrooper.packetevents.PacketEventsAPI;
+import com.github.retrooper.packetevents.settings.PacketEventsSettings;
 import io.fairyproject.FairyPlatform;
 import io.fairyproject.bukkit.FairyBukkitPlatform;
 import io.fairyproject.mc.protocol.PacketEventsBuilder;
@@ -40,7 +41,8 @@ public class BukkitPacketEventsBuilder implements PacketEventsBuilder {
     @Override
     public PacketEventsAPI<?> build() {
         PacketEventsAPI<Plugin> packetEventsAPI = SpigotPacketEventsBuilder.buildNoCache(FairyBukkitPlatform.PLUGIN);
-        packetEventsAPI.getSettings().reEncodeByDefault(false);
+        PacketEventsSettings settings = packetEventsAPI.getSettings();
+        settings.reEncodeByDefault(false);
 
         return packetEventsAPI;
     }
