@@ -86,7 +86,7 @@ public class MCProtocol {
     @PostInitialize
     public void onPostInitialize() {
         this.packetEvents.getSettings()
-                .debug(true)
+                .debug(false)
                 .bStats(true)
                 .checkForUpdates(false)
                 .timeStampMode(TimeStampMode.MILLIS);
