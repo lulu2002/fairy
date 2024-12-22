@@ -45,6 +45,7 @@ import lombok.RequiredArgsConstructor;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionStage;
@@ -122,7 +123,11 @@ public class ContainerNodeLoader {
     private CompletableFuture<?> callPreInitProcessors() {
         List<CompletableFuture<?>> futures = new ArrayList<>();
 
-        for (InstanceEntry entry : this.collection) {
+        // fix ConcurrentModificationException
+        List<InstanceEntry> snapshot = new ArrayList<>();
+        this.collection.forEach(snapshot::add);
+
+        for (InstanceEntry entry : snapshot) {
             Object instance = entry.getInstance();
             ContainerObj object = entry.getContainerObject();
             if (!this.trySetLifeCycle(object, LifeCycle.PRE_INIT))
