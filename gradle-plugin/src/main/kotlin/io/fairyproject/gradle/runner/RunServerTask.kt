@@ -43,6 +43,7 @@ open class RunServerTask @Inject constructor(private val version: JavaVersion, a
         classpath = project.files(artifact.artifactPath)
         workingDir = workDirectory.toFile()
         standardInput = System.`in`
+        isIgnoreExitValue = true
 
         javaLauncher.set(javaToolchainService.launcherFor { it.languageVersion.set(JavaLanguageVersion.of(javaVersion.majorVersion)) })
     }
