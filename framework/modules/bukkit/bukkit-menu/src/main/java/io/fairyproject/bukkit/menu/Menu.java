@@ -435,7 +435,6 @@ public abstract class Menu implements TerminableConsumer {
         this.inventory = inventory;
         if (recreate) {
             this.rerendering = true;
-            player.closeInventory();
             player.openInventory(inventory);
             this.rerendering = false;
         } else {
